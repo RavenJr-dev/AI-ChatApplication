@@ -9,3 +9,5 @@ This project demonstrates how modern web technologies can be combined with advan
 - Frontend built with React.js & CSS  
 - Backend with Express.js and MongoDB Atlas  
 
+## Credits
+This project is based on a tutorial by [Lama Dev](https://www.youtube.com/watch?v=8iAQ1h30n5I&t=2s). I followed their guidance and added my own customizations.
