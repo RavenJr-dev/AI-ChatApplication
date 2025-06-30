@@ -12,16 +12,30 @@ dotenv.config();
 const port = process.env.PORT || 3000;
 const app = express();
 
-// Middleware
+// ✅ Allowed origins (add more if needed)
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  "http://localhost:5173", // local dev
+  "http://localhost:3000",
+];
+
+// ✅ CORS Middleware
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS error: ${origin} not allowed`));
+      }
+    },
     credentials: true,
   })
 );
+
 app.use(express.json());
 
-// MongoDB Connection
+// ✅ MongoDB Connection
 const connect = async () => {
   try {
     await mongoose.connect(process.env.MONGO);
@@ -31,20 +45,20 @@ const connect = async () => {
   }
 };
 
-// ImageKit Configuration
+// ✅ ImageKit Setup
 const imagekit = new ImageKit({
   urlEndpoint: process.env.IMAGE_KIT_ENDPOINT,
   publicKey: process.env.IMAGE_KIT_PUBLIC_KEY,
   privateKey: process.env.IMAGE_KIT_PRIVATE_KEY,
 });
 
-// Image Upload Auth Route
+// ✅ Upload Route (for image auth)
 app.get("/api/upload", (req, res) => {
   const result = imagekit.getAuthenticationParameters();
   res.send(result);
 });
 
-// Create New Chat
+// ✅ Create Chat
 app.post("/api/chats", ClerkExpressRequireAuth(), async (req, res) => {
   const userId = req.auth.userId;
   const { text } = req.body;
@@ -62,12 +76,7 @@ app.post("/api/chats", ClerkExpressRequireAuth(), async (req, res) => {
     if (!userChats) {
       const newUserChats = new UserChats({
         userId,
-        chats: [
-          {
-            _id: savedChat._id,
-            title: text.substring(0, 40),
-          },
-        ],
+        chats: [{ _id: savedChat._id, title: text.substring(0, 40) }],
       });
       await newUserChats.save();
     } else {
@@ -91,7 +100,7 @@ app.post("/api/chats", ClerkExpressRequireAuth(), async (req, res) => {
   }
 });
 
-// Fetch All Chats for User
+// ✅ Get All Chats for User
 app.get("/api/userchats", ClerkExpressRequireAuth(), async (req, res) => {
   const userId = req.auth.userId;
 
@@ -105,7 +114,7 @@ app.get("/api/userchats", ClerkExpressRequireAuth(), async (req, res) => {
   }
 });
 
-// Fetch Specific Chat by ID
+// ✅ Get Specific Chat
 app.get("/api/chats/:id", ClerkExpressRequireAuth(), async (req, res) => {
   const userId = req.auth.userId;
 
@@ -119,7 +128,7 @@ app.get("/api/chats/:id", ClerkExpressRequireAuth(), async (req, res) => {
   }
 });
 
-// Update Chat (add question/answer)
+// ✅ Update Chat (Add Message)
 app.put("/api/chats/:id", ClerkExpressRequireAuth(), async (req, res) => {
   const userId = req.auth.userId;
   const { question, answer, img } = req.body;
@@ -158,13 +167,13 @@ app.put("/api/chats/:id", ClerkExpressRequireAuth(), async (req, res) => {
   }
 });
 
-// Error Handler
+// ✅ Error Handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(401).send("Unauthenticated!");
+  res.status(401).send("Unauthenticated or CORS error");
 });
 
-// Start Server
+// ✅ Start Server
 app.listen(port, () => {
   connect();
   console.log(`🚀 Server running on port ${port}`);
