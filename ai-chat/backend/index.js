@@ -9,7 +9,7 @@ import { ClerkExpressRequireAuth } from "@clerk/clerk-sdk-node";
 
 dotenv.config();
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5000;
 const app = express();
 
 app.use(
@@ -191,7 +191,6 @@ app.use((err, req, res, next) => {
   res.status(401).send('Unauthenticated!');
 });
 
-app.listen(port,()=>{
-  connect()
-  console.log("Server running on 3000");
+app.listen(port, () => {
+  console.log(`Server running on ${port}`);
 });
